@@ -1,4 +1,5 @@
 import torch
+import argparse
 import numpy as np
 import torch.nn as nn
 import torch.optim as optim
@@ -15,10 +16,9 @@ input_size = 28 * 28  # MNIST images are 28x28
 num_classes = 10
 learning_rate = 1e-4
 batch_size = 64
-num_epochs = 1000
+num_epochs = 100
 alpha = 1  # Weighting factor for the reconstruction loss
 
-# Load and preprocess MNIST dataset
 transform = transforms.Compose([
 transforms.ToTensor(),
 transforms.Normalize((0.1307,), (0.3081,))
@@ -47,23 +47,21 @@ class Encoder(nn.Module):
         x = x @ self.weight
         return x
 
-# 2. Decoder (transpose weight)
-class Decoder(nn.Module):
+# 2. Generator (transpose weight)
+class Generator(nn.Module):
     def __init__(self, weight):
-        super(Decoder, self).__init__()
+        super(Generator, self).__init__()
         self.weight = weight
-        self.sigmoid = nn.Sigmoid()
     
     def forward(self, x):
         x = x @ self.weight.T
-        return self.sigmoid(x)
+        return x
 
-# 3. DecoderInv (pseudo inverting weight) 
-class DecoderInv(nn.Module):
+# 3. GeneratorInv (pseudo inverting weight) 
+class GeneratorInv(nn.Module):
     def __init__(self, weight):
-        super(DecoderInv, self).__init__()
+        super(GeneratorInv, self).__init__()
         self.weight = weight
-        self.sigmoid = nn.Sigmoid()
     
     def forward(self, x):
         weight = torch.linalg.pinv(self.weight)
@@ -71,30 +69,37 @@ class DecoderInv(nn.Module):
         return x
 
 
-# Initialize models with the shared weight parameter
-model_encoder = Encoder(shared_weight)
-model_mean = Decoder(shared_weight)
-
-model_encoder.compile()
-model_mean.compile()
-
 
 # --- LOSS FUNCTION DEFINITIONS ---
 
 criterion_cls = nn.CrossEntropyLoss()
 criterion_recon = nn.L1Loss()
 
-# Use a single optimizer for the shared weight
 optimizer = optim.Adam([shared_weight], lr=learning_rate)
 
 # --- TRAINING & TESTING ---
 
-def train():
+def train(generator_type):
+    # Initialize models with the shared weight parameter
+    model_encoder = Encoder(shared_weight)
+
+    generator = None
+    if generator_type == 'transpose':
+        generator = Generator(shared_weight)
+    elif generator_type == 'pinv':
+        generator = GeneratorInv(shared_weight)
+    else:
+        raise ValueError("Invalid generator type. Choose 'transpose' or 'pinv'.")
+
+    model_encoder.compile()
+    generator.compile()
+
+
     loss_history = []
     best_loss = float('inf')
     
     model_encoder.train()
-    model_mean.train()
+    generator.train()
 
     for epoch in range(num_epochs):
         total_loss = 0
@@ -111,15 +116,10 @@ def train():
             output = model_encoder(data)
             
             # 2. Reconstruction path (Mean and Variance)
-            reconstructed_mean = model_mean(output)
+            reconstructed_mean = generator(output)
 
-            # --- Loss Calculation ---
             loss_cls = criterion_cls(output, target)
-            
-            # reconstruction loss
             loss_recon = criterion_recon(reconstructed_mean, flat_data)
-
-            # Combined loss
             loss = loss_cls + alpha * loss_recon
             
             loss.backward()
@@ -147,14 +147,22 @@ def train():
     plt.grid(True)
     plt.show()
 
-def test():
-    
-    # model_encoder.load_state_dict({'weight': shared_weight_loaded}, strict=False)
-    # model_mean.load_state_dict({'weight': shared_weight_loaded}, strict=False)
-    # model_log_var.load_state_dict({'weight': shared_weight_loaded}, strict=False)
+def test(generator_type):
+    model_encoder = Encoder(shared_weight)
+
+    generator = None
+    if generator_type == 'transpose':
+        generator = Generator(shared_weight)
+    elif generator_type == 'pinv':
+        generator = GeneratorInv(shared_weight)
+    else:
+        raise ValueError("Invalid generator type. Choose 'transpose' or 'pinv'.")
+
+    generator.load_state_dict(torch.load('shared_weight.pth'))
+    model_encoder.load_state_dict(torch.load('shared_weight.pth'))
     
     model_encoder.eval()
-    model_mean.eval()
+    generator.eval()
 
     correct = 0
     total = 0
@@ -173,7 +181,7 @@ def test():
             correct += (predicted == target).sum().item()
 
             # Reconstruction
-            reconstructed_mean = model_mean(output)
+            reconstructed_mean = generator(output)
             test_loss_recon += criterion_recon(reconstructed_mean, flat_data).item()
 
     test_loss_cls /= len(test_loader)
@@ -184,20 +192,20 @@ def test():
 
 
 def generate_and_plot_images(weight):
-    model_mean.load_state_dict({'weight': weight}, strict=False)    
-    model_mean.eval()
+    generator = Generator(weight)
+
+    generator.eval()
     
     print("\nGenerating images from one-hot vectors...")
     one_hot_vectors = torch.eye(num_classes)
     
     with torch.no_grad():
-        generated_means = model_mean(one_hot_vectors)
+        generated_means = generator(one_hot_vectors)
 
     generated_means = generated_means.reshape(num_classes, 28, 28)
 
     fig, axes = plt.subplots(2, 5, figsize=(10, 5))
     for i, ax in enumerate(axes.flat):
-        # Plot generated mean
         ax.imshow(generated_means[i].cpu().numpy(), cmap='gray')
         ax.set_title(f"Generated: {i}")
         ax.axis('off')
@@ -209,6 +217,11 @@ def generate_and_plot_images(weight):
 
 # Run training, testing, and generation
 if __name__ == '__main__':
-    train()
-    test()
+    parser = argparse.ArgumentParser(description="")
+    parser.add_argument('--type', default='transpose',  type=str, help="Generator type: 'transpose' or 'pinv")
+    args = parser.parse_args()
+    generator_type = args.type
+
+    train(generator_type)
+    test(generator_type)
     generate_and_plot_images(weight=torch.load('shared_weight.pth'))

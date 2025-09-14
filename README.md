@@ -14,7 +14,7 @@ This repository provides code for dual pupose weights. A neural network whose we
 ## Usage 
 
 ```
-python main.py
+python main.py --type transpose
 ```
 
 ## To Do
