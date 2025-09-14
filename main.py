@@ -137,7 +137,7 @@ def train(generator_type):
 
         if avg_loss < best_loss:
             best_loss = avg_loss
-            torch.save(shared_weight, generator_type+'shared_weight.pth')
+            torch.save(shared_weight, generator_type+'_shared_weight.pth')
 
     # Plot the loss history
     plt.plot(loss_history)
@@ -158,8 +158,8 @@ def test(generator_type):
     else:
         raise ValueError("Invalid generator type. Choose 'transpose' or 'pinv'.")
 
-    generator.load_state_dict(torch.load(generator_type+'shared_weight.pth'))
-    model_encoder.load_state_dict(torch.load(generator_type+'shared_weight.pth'))
+    generator.load_state_dict(torch.load(generator_type+'_shared_weight.pth'))
+    model_encoder.load_state_dict(torch.load(generator_type+'_shared_weight.pth'))
     
     model_encoder.eval()
     generator.eval()
@@ -224,4 +224,4 @@ if __name__ == '__main__':
 
     train(generator_type)
     test(generator_type)
-    generate_and_plot_images(weight=torch.load(generator_type+'shared_weight.pth'))
+    generate_and_plot_images(weight=torch.load(generator_type+'_shared_weight.pth'))
