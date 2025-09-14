@@ -12,12 +12,12 @@ torch.manual_seed(42)
 np.random.seed(42)
 
 # Define hyperparameters
-input_size = 28 * 28  # MNIST images are 28x28
+input_size = 28 * 28 
 num_classes = 10
 learning_rate = 1e-4
 batch_size = 64
 num_epochs = 100
-alpha = 1  # Weighting factor for the reconstruction loss
+alpha = 1
 
 transform = transforms.Compose([
 transforms.ToTensor(),
@@ -148,18 +148,16 @@ def train(generator_type):
     plt.show()
 
 def test(generator_type):
-    model_encoder = Encoder(shared_weight)
+    saved_weight = torch.load(generator_type+'_shared_weight.pth')
+    model_encoder = Encoder(saved_weight)
 
     generator = None
     if generator_type == 'transpose':
-        generator = Generator(shared_weight)
+        generator = Generator(saved_weight)
     elif generator_type == 'pinv':
-        generator = GeneratorInv(shared_weight)
+        generator = GeneratorInv(saved_weight)
     else:
         raise ValueError("Invalid generator type. Choose 'transpose' or 'pinv'.")
-
-    generator.load_state_dict(torch.load(generator_type+'_shared_weight.pth'))
-    model_encoder.load_state_dict(torch.load(generator_type+'_shared_weight.pth'))
     
     model_encoder.eval()
     generator.eval()
@@ -213,7 +211,6 @@ def generate_and_plot_images(weight):
     plt.suptitle("Generated Digit Mean Images from One-Hot Vectors", fontsize=14)
     plt.tight_layout()
     plt.show()
-
 
 # Run training, testing, and generation
 if __name__ == '__main__':

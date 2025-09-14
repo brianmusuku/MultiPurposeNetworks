@@ -1,24 +1,34 @@
 ## Dual Purpose Weights
 
-This repository provides code for dual pupose weights. A neural network whose weights are optimised for multiple tasks depending on the transformation. In the default configuration, it is a classifier and when weights are transformed (pseudoinverse / transpose) it becomes a generator.
+This repository contains code for multi purpose weights. A neural network optimised for multiple tasks depending on the weights transformation. In this experiment, the default configuration of the model is a classifier but when weights are transformed (pseudoinverse / transpose) it becomes a generator.
 
 
 ## Results
 
-| Transformation    | Classifier    | Generation (MSE)    |
+We train variants on the MNIST dataset for 100 epochs. We evaluate on digit classifier accuracy and mean absolute error of the data generator.
+
+| Transformation    | Classifier    | Generation (MAE)|
 | ------------------|:-------------:|:-------------:|
-| Transpose         | 92%           |  0.6          |
-| psuedoinverse     | 89%           |  0.9          |
-| shuffled rows     | 13%           |  ~            |
+| transpose         | 91.2%         |  0.4057       |
+| psuedoinverse     | 91.7%         |  0.3753       |
+| shuffled rows     | ~             |  ~            |
 
 ## Usage 
 
+
+For transpose transformation: 
 ```
 python main.py --type transpose
+```
+
+
+For psuedoinverse transformation: 
+```
+python main.py --type pinv
 ```
 
 ## To Do
 
 * Implement more weight transformations
 * Implement deeper layered networks.
-* Test more tasks.
+* Test more tasks and datasets.
