@@ -137,7 +137,7 @@ def train(generator_type):
 
         if avg_loss < best_loss:
             best_loss = avg_loss
-            torch.save(shared_weight, 'shared_weight.pth')
+            torch.save(shared_weight, generator_type+'shared_weight.pth')
 
     # Plot the loss history
     plt.plot(loss_history)
