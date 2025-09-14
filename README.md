@@ -7,7 +7,7 @@ This repository contains code for dual purpose weights. A neural network optimis
 
 We train variants on the MNIST dataset for 100 epochs. We evaluate on digit classifier accuracy and mean absolute error of the data generator.
 
-| Transformation    | Classifier    | Generation (MAE)|
+| Transformation    | Classifier    | Generator (MAE)|
 | ------------------|:-------------:|:-------------:|
 | transpose         | 91.2%         |  0.4057       |
 | psuedoinverse     | 91.7%         |  0.3753       |
