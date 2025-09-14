@@ -115,7 +115,7 @@ def train(generator_type):
             # 1. Classification path
             output = model_encoder(data)
             
-            # 2. Reconstruction path (Mean and Variance)
+            # 2. Reconstruction path 
             reconstructed_mean = generator(output)
 
             loss_cls = criterion_cls(output, target)
