@@ -158,8 +158,8 @@ def test(generator_type):
     else:
         raise ValueError("Invalid generator type. Choose 'transpose' or 'pinv'.")
 
-    generator.load_state_dict(torch.load('shared_weight.pth'))
-    model_encoder.load_state_dict(torch.load('shared_weight.pth'))
+    generator.load_state_dict(torch.load(generator_type+'shared_weight.pth'))
+    model_encoder.load_state_dict(torch.load(generator_type+'shared_weight.pth'))
     
     model_encoder.eval()
     generator.eval()
@@ -224,4 +224,4 @@ if __name__ == '__main__':
 
     train(generator_type)
     test(generator_type)
-    generate_and_plot_images(weight=torch.load('shared_weight.pth'))
+    generate_and_plot_images(weight=torch.load(generator_type+'shared_weight.pth'))
