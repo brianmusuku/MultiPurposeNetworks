@@ -1,6 +1,6 @@
 ## Dual Purpose Weights
 
-This repository contains code for multi purpose weights. A neural network optimised for multiple tasks depending on the weights transformation. In this experiment, the default configuration of the model is a classifier but when weights are transformed (pseudoinverse / transpose) it becomes a generator.
+This repository contains code for dual purpose weights. A neural network optimised for multiple tasks depending on the weights transformation. In this experiment, the default configuration of the model is a classifier but when weights are transformed (pseudoinverse / transpose) it becomes a generator.
 
 
 ## Results
